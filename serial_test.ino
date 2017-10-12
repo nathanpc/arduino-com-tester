@@ -51,8 +51,6 @@ void loop() {
   while (Serial.available()) {
     char c = (char)Serial.read();
 
-    // TODO: Prevent cidx from passing MAX_CHARS-1.
-
     if (flags[FL_CMDECHO]) {
       Serial.print(c);
     }
@@ -62,6 +60,14 @@ void loop() {
       rx_str[cidx] = '\0';
       cidx = 0;
       line_recv = true;
+    } else if (cidx == MAX_CHARS) {
+      // Character limit exceeded.
+      rx_str[cidx] = '\0';
+      cidx = 0;
+      line_recv = true;
+
+      Serial.print("\r\nCommand buffer size exceeded. Buffer size is: ");
+      Serial.println(MAX_CHARS);
     } else if (c == '\r') {
       // CR received.
     } else {
