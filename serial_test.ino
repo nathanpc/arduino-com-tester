@@ -154,8 +154,7 @@ void split_line() {
       break;
     } else {
       // Found a normal character.
-      command[i] = c;
-      // TODO: Auto uppercase?
+      command[i] = toupper(c);
     }
   }
 }
