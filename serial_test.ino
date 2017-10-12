@@ -74,7 +74,9 @@ void parse_line() {
     }
   } else {
     // Command mode.
-    split_line();
+    if (rx_str[0] != '\0') {
+      split_line();
+    }
 
     if (strcmp("ECHO", command) == 0) {
       // Echo mode.
