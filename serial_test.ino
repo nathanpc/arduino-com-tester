@@ -9,6 +9,7 @@
  */
 
 // Constants stuff.
+#define VERSION   "1.0"
 #define MAX_CHARS 200
 
 // Flags.
@@ -32,6 +33,13 @@ int flags[] = {
 void setup() {
   // Initialize the serial port with a standard baud rate.
   Serial.begin(9600);
+
+  // Splash text.
+  Serial.print("Arduino COM Tester v");
+  Serial.println(VERSION);
+  Serial.println("Developed by Nathan Campos\r\n");
+
+  // Print the command prompt.
   Serial.print("> ");
 }
 
