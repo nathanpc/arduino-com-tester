@@ -12,7 +12,8 @@
 #define MAX_CHARS 200
 
 // Flags.
-#define FL_ECHO 0
+#define FL_ECHO    0
+#define FL_CMDECHO 1
 
 unsigned int cidx = 0;       // Current character index.
 char rx_str[MAX_CHARS + 1];  // Accomodate the '\0'.
@@ -21,7 +22,8 @@ char command[MAX_CHARS + 1];
 char argument[MAX_CHARS + 1];
 
 int flags[] = {
-  false  // FL_ECHO
+  false,  // FL_ECHO
+  true,   // FL_CMDECHO
 };
 
 /**
@@ -30,6 +32,7 @@ int flags[] = {
 void setup() {
   // Initialize the serial port with a standard baud rate.
   Serial.begin(9600);
+  Serial.print("> ");
 }
 
 /**
@@ -41,6 +44,10 @@ void loop() {
     char c = (char)Serial.read();
 
     // TODO: Prevent cidx from passing MAX_CHARS-1.
+
+    if (flags[FL_CMDECHO]) {
+      Serial.print(c);
+    }
 
     if (c == '\n') {
       // LF received.
@@ -73,9 +80,22 @@ void loop() {
       split_line();
 
       if (strcmp("ECHO", command) == 0) {
+        // Echo mode.
         flags[FL_ECHO] = true;
         Serial.println("Echo mode enabled. To disable send ECHOOFF");
+      } else if (strcmp("CMDECHO", command) == 0) {
+        // Command echo.
+        if (argument[0] == '1') {
+          flags[FL_CMDECHO] = true;
+          Serial.println("Command echo enabled.");
+        } else if (argument[0] == '0') {
+          flags[FL_CMDECHO] = false;
+          Serial.println("Command echo disabled.");
+        } else {
+          Serial.println("Unknown argument.");
+        }
       } else {
+        // Unknown.
         Serial.print("Unknown command: ");
         Serial.println(command);
         Serial.print("Argument: ");
@@ -84,6 +104,10 @@ void loop() {
     }
 
     line_recv = false;
+
+    if (flags[FL_CMDECHO]) {
+      Serial.print("> ");
+    }
   }
 }
 
