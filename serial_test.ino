@@ -49,82 +49,99 @@ void setup() {
 void loop() {
   // Check if there's data available to be read.
   while (Serial.available()) {
-    char c = (char)Serial.read();
-
-    if (flags[FL_CMDECHO]) {
-      Serial.print(c);
-    }
-
-    if (c == '\n') {
-      // LF received.
-      rx_str[cidx] = '\0';
-      cidx = 0;
-      line_recv = true;
-    } else if (cidx == MAX_CHARS) {
-      // Character limit exceeded.
-      rx_str[cidx] = '\0';
-      cidx = 0;
-      line_recv = true;
-
-      Serial.print("\r\nCommand buffer size exceeded. Buffer size is: ");
-      Serial.println(MAX_CHARS);
-    } else if (c == '\r') {
-      // CR received.
-    } else {
-      // Any old character received.
-      rx_str[cidx] = c;
-      cidx++;
-    }
+    handle_rx();
   }
 
   // Received a full line, so let's parse it.
   if (line_recv) {
-    if (flags[FL_ECHO]) {
-      // Echo mode.
-      if (strcmp(rx_str, "ECHOOFF") == 0) {
-        // Disable echo mode.
-        flags[FL_ECHO] = false;
-        Serial.println("Echo mode disabled.");
-      } else {
-        Serial.print("< ");
-        Serial.println(rx_str);
-      }
-    } else {
-      // Command mode.
-      split_line();
-
-      if (strcmp("ECHO", command) == 0) {
-        // Echo mode.
-        flags[FL_ECHO] = true;
-        Serial.println("Echo mode enabled. To disable send ECHOOFF");
-      } else if (strcmp("CMDECHO", command) == 0) {
-        // Command echo.
-        if (argument[0] == '1') {
-          flags[FL_CMDECHO] = true;
-          Serial.println("Command echo enabled.");
-        } else if (argument[0] == '0') {
-          flags[FL_CMDECHO] = false;
-          Serial.println("Command echo disabled.");
-        } else {
-          Serial.println("Unknown argument.");
-        }
-      } else {
-        // Unknown.
-        Serial.print("Unknown command: ");
-        Serial.println(command);
-        Serial.print("Argument: ");
-        Serial.println(argument);
-      }
-    }
-
-    line_recv = false;
-
-    if (flags[FL_CMDECHO]) {
-      Serial.print("> ");
-    }
+    parse_line();
   }
 }
 
+/**
+ * Parses a line.
+ */
+void parse_line() {
+  if (flags[FL_ECHO]) {
+    // Echo mode.
+    if (strcmp(rx_str, "ECHOOFF") == 0) {
+      // Disable echo mode.
+      flags[FL_ECHO] = false;
+      Serial.println("Echo mode disabled.");
+    } else {
+      Serial.print("< ");
+      Serial.println(rx_str);
+    }
+  } else {
+    // Command mode.
+    split_line();
+
+    if (strcmp("ECHO", command) == 0) {
+      // Echo mode.
+      flags[FL_ECHO] = true;
+      Serial.println("Echo mode enabled. To disable send ECHOOFF");
+    } else if (strcmp("CMDECHO", command) == 0) {
+      // Command echo.
+      if (argument[0] == '1') {
+        flags[FL_CMDECHO] = true;
+        Serial.println("Command echo enabled.");
+      } else if (argument[0] == '0') {
+        flags[FL_CMDECHO] = false;
+        Serial.println("Command echo disabled.");
+      } else {
+        Serial.println("Unknown argument.");
+      }
+    } else {
+      // Unknown.
+      Serial.print("Unknown command: ");
+      Serial.println(command);
+      Serial.print("Argument: ");
+      Serial.println(argument);
+    }
+  }
+
+  line_recv = false;
+
+  if (flags[FL_CMDECHO]) {
+    Serial.print("> ");
+  }
+}
+
+/**
+ * Handles the serial RX stuff.
+ */
+void handle_rx() {
+  char c = (char)Serial.read();
+
+  if (flags[FL_CMDECHO]) {
+    Serial.print(c);
+  }
+
+  if (c == '\n') {
+    // LF received.
+    rx_str[cidx] = '\0';
+    cidx = 0;
+    line_recv = true;
+  } else if (cidx == MAX_CHARS) {
+    // Character limit exceeded.
+    rx_str[cidx] = '\0';
+    cidx = 0;
+    line_recv = true;
+
+    Serial.print("\r\nCommand buffer size exceeded. Buffer size is: ");
+    Serial.println(MAX_CHARS);
+  } else if (c == '\r') {
+    // CR received.
+  } else {
+    // Any old character received.
+    rx_str[cidx] = c;
+    cidx++;
+  }
+}
+
+/**
+ * Splits the command and argument from the RX buffer line.
+ */
 void split_line() {
   char c;
 
